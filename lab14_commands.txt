@@ -167,3 +167,43 @@ int s0/0/1
     ppp pap sent-username NewB password cisco 
 exit 
 do show ppp session
+
+
+
+
+!!!!!NAT on HQ!!!!!!!!
+ip access-list standard NAT
+permit 10.0.0.0 0.255.255.255
+exit
+ip nat pool HQ 209.165.200.241 209.165.200.245 netmask 255.255.255.248 
+ip nat inside source list NAT pool HQ overload 
+
+int s0/0/0
+ip nat inside
+int s0/0/1
+ip nat inside
+int g0/0
+ip nat inside
+
+int s0/1/0
+ip nat outside
+int g0/1
+ip nat outside
+exit
+exit
+show ip nat translations
+
+
+!!!!!!!!ACL on HQ!!!!!
+no ip acc ex HQINTERNET
+ip access-list extended HQINTERNET
+permit tcp any any eq 179
+permit tcp any 192.0.2.0 0.0.0.255 eq 80
+permit tcp 209.165.0.0 0.0.255.255 any established
+permit icmp 209.165.0.0 0.0.255.255 any echo-reply
+deny any any
+exit
+do show ip access
+
+int s0/1/0
+ip access-group HQINTERNET in
